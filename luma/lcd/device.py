@@ -78,7 +78,8 @@ class GPIOBacklight:
             self._disabled = self._gpio.LOW
 
         try:
-            self._gpio.setup(self._pin, self._gpio.OUT)
+            if self._pin:
+                self._gpio.setup(self._pin, self._gpio.OUT)
         except RuntimeError as e:
             if str(e) == 'Module not imported correctly!':
                 raise luma.core.error.UnsupportedPlatform('GPIO access not available')
@@ -91,10 +92,11 @@ class GPIOBacklight:
         :type is_enabled: bool
         """
         assert is_enabled in (True, False)
-        self._gpio.output(self._pin, self._enabled if is_enabled else self._disabled)
+        if self._pin:
+            self._gpio.output(self._pin, self._enabled if is_enabled else self._disabled)
 
     def cleanup(self):
-        if self._gpio:
+        if self._gpio and self._pin:
             self._gpio.cleanup(self._pin)
 
 
@@ -207,7 +209,7 @@ class backlit_device(device):
     .. versionadded:: 2.0.0
     """
 
-    def __init__(self, const=None, serial_interface=None, gpio=None, gpio_LIGHT=18, active_low=True, pwm_frequency=None, backpack_pin=None, **kwargs):
+    def __init__(self, const=None, serial_interface=None, gpio=None, gpio_LIGHT=None, active_low=True, pwm_frequency=None, backpack_pin=None, **kwargs):
         super(backlit_device, self).__init__(const, serial_interface)
 
         if backpack_pin or (isinstance(serial_interface, pcf8574) and hasattr(serial_interface, "_backlight_enabled")):
